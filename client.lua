@@ -30,6 +30,7 @@ AddEventHandler('Lux_PlaceableObjects:use', function(itemName, data)
         local ped   = PlayerPedId()
         local start = GetEntityCoords(ped)
         local ghost = CreateObject(data.prop, start, false, false, false)
+        local heading = 0.0
 
         SetEntityCollision(ghost, false, false)
         SetEntityAlpha(ghost, 200,  false)
@@ -38,22 +39,41 @@ AddEventHandler('Lux_PlaceableObjects:use', function(itemName, data)
         SetEntityDrawOutline(ghost, true)
 
         while true do
+            ESX.ShowHelpNotification(string.format(Translation[Config.Locale]['place_onject']))
             local tgt = CoordsPlayerIsLookingAt()
-            if tgt then SetEntityCoords(ghost, tgt) end
+            if tgt then
+                SetEntityCoords(ghost, tgt.x, tgt.y, tgt.z)
+                SetEntityHeading(ghost, heading)
+            end
 
-            if IsControlJustReleased(0, 38) then
+            if IsControlPressed(0, 174) then -- LEFT
+                heading = heading + 1.0
+                if heading < 0 then heading = heading + 360.0 end
+            end
+
+            if IsControlPressed(0, 175) then -- RIGHT
+                heading = heading - 1.0
+                if heading > 360 then heading = heading - 360.0 end
+            end
+
+            if IsControlJustReleased(0, 38) then -- E
                 SetEntityAlpha(ghost, 255, false)
                 SetEntityDrawOutline(ghost, false)
                 SetEntityCollision(ghost, true, true)
                 DeleteEntity(ghost)
-                TriggerServerEvent('Lux_PlaceableObjects:Palce', itemName, data.prop, tgt, data.name)
+
+                -- Rotation mit an Server senden
+                TriggerServerEvent('Lux_PlaceableObjects:Palce', itemName, data.prop, tgt, data.name, heading)
                 getProps()
                 break
             end
+
             Wait(0)
         end
     end)
 end)
+
+
 
 function getProps()
     ESX.TriggerServerCallback('Lux_PlaceableObjects:getProps', function(list)
@@ -64,16 +84,18 @@ function getProps()
 
             if not PropsById[p.id] then
                 PropsById[p.id] = {
-                    id     = p.id,
-                    item   = p.item,
-                    model  = p.prop,
-                    coords = vector3(p.coords.x, p.coords.y, p.coords.z),
-                    name   = p.name,
-                    placed = false,
-                    entity = nil
+                    id      = p.id,
+                    item    = p.item,
+                    model   = p.prop,
+                    coords  = vector3(p.coords.x, p.coords.y, p.coords.z),
+                    heading = p.heading or 0.0,
+                    name    = p.name,
+                    placed  = false,
+                    entity  = nil
                 }
             else
                 PropsById[p.id].coords = vector3(p.coords.x, p.coords.y, p.coords.z)
+                PropsById[p.id].heading = p.heading or 0.0
             end
         end
 
@@ -100,9 +122,10 @@ CreateThread(function()
 
         for _, v in pairs(PropsById) do
             if not v.placed then
-                v.entity  = CreateObject(v.model, v.coords, false, false, false)
+                v.entity = CreateObject(v.model, v.coords, false, false, false)
+                SetEntityHeading(v.entity, v.heading or 0.0)
                 SetEntityCollision(v.entity, true, true)
-                v.placed  = true
+                v.placed = true
             end
 
             if v.entity and #(pCoord - v.coords) < 2.0 then

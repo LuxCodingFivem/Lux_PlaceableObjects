@@ -9,10 +9,10 @@ for k, v in pairs(Config.Items) do
 end
 
 RegisterServerEvent('Lux_PlaceableObjects:Palce')
-AddEventHandler('Lux_PlaceableObjects:Palce', function(item, prop, coords, name)
+AddEventHandler('Lux_PlaceableObjects:Palce', function(item, prop, coords, name, heading)
     local xPlayer = ESX.GetPlayerFromId(source)
     xPlayer.removeInventoryItem(item, 1)
-    table.insert(Props, {id = #Props + 1, item = item, prop = prop, coords = coords, name = name})
+    table.insert(Props, {id = #Props + 1, item = item, prop = prop, coords = coords, name = name, heading = heading})
 end)
 
 ESX.RegisterServerCallback('Lux_PlaceableObjects:getProps', function(source, cb)
