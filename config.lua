@@ -11,9 +11,9 @@ Config.Items = {
 
 Translation = {
     ['de'] = {
-        [''] = '',
+        ['collect_object'] = 'Drücke ~INPUT_CONTEXT~ um %s aufzusammeln',
     },
     ['en'] = {
-        [''] = '',
+        ['collect_object'] = 'Press ~INPUT_CONTEXT~ to collect %s',
     },
 }
